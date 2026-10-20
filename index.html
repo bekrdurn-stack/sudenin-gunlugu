@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sudenin Günlüğü 🐾</title>
+  
+  <!-- PWA & iOS Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sudenin Günlüğü">
+  <meta name="theme-color" content="#fff0f5">
+  
+  <!-- Tailwind CSS & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase App & Database SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 182, 193, 0.3);
+    }
+    .floating-hearts span {
+      position: absolute;
+      pointer-events: none;
+      animation: float 4s linear infinite;
+      opacity: 0;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) scale(0.8); opacity: 1; }
+      100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+    }
+    .bottom-nav-active {
+      color: #f43f5e;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-pink-50 via-rose-50 to-purple-50 min-h-screen text-slate-800 pb-24">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-white/70 backdrop-blur-md border-b border-rose-100 px-5 py-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shadow-inner">
+        <!-- Kalpli Kedi İkonu -->
+        <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
+          <circle cx="50" cy="50" r="45" fill="#FFAAA6" stroke="#FF8B8B" stroke-width="4"/>
+          <ellipse cx="50" cy="50" rx="35" ry="32" fill="white"/>
+          <path d="M 22 35 L 30 15 L 42 30 Z" fill="white" stroke="#333" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M 26 32 L 31 19 L 39 28 Z" fill="#FFAAA6"/>
+          <path d="M 78 35 L 70 15 L 58 30 Z" fill="white" stroke="#333" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M 74 32 L 69 19 L 61 28 Z" fill="#FFAAA6"/>
+          <ellipse cx="38" cy="45" rx="4" ry="5" fill="#333"/>
+          <ellipse cx="62" cy="45" rx="4" ry="5" fill="#333"/>
+          <polygon points="50,52 46,48 54,48" fill="#FF8B8B"/>
+          <path d="M 46 54 Q 50 58 54 54" stroke="#333" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M 50 60 C 40 52 35 65 50 78 C 65 65 60 52 50 60 Z" fill="#E60023"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="font-bold text-lg text-slate-800 leading-tight">Sudenin Günlüğü 🐾</h1>
+        <p class="text-xs text-rose-500 font-medium flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Canlı Senkronize
+        </p>
+      </div>
+    </div>
+    <button onclick="toggleModal('infoModal')" class="p-2 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    </button>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-md mx-auto px-4 pt-5 space-y-6">
+
+    <!-- SEKMELER (TAB CONTENT) -->
+
+    <!-- 1. SEKMELER: ANA SAYFA & GÜNÜN NOTU -->
+    <section id="tab-home" class="tab-content space-y-6">
+      
+      <!-- HERO: GÜNÜN NOTU -->
+      <div class="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-rose-400 via-pink-400 to-rose-500 text-white shadow-xl shadow-rose-200">
+        <div class="absolute -right-4 -bottom-4 opacity-15">
+          <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        
+        <div class="relative z-10 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold tracking-wide uppercase">💌 Günün Sevgi Notu</span>
+            <button onclick="editDailyNote()" class="text-xs bg-white/30 hover:bg-white/40 px-3 py-1 rounded-full backdrop-blur-md transition-all font-medium">Düzenle ✏️</button>
+          </div>
+          <p id="dailyNoteText" class="text-lg font-medium leading-relaxed italic pt-2">
+            "Yükleniyor..."
+          </p>
+          <div class="pt-2 text-right text-xs opacity-80 font-light" id="dailyNoteDate">
+            --.--.----
+          </div>
+        </div>
+      </div>
+
+      <!-- HIZLI ERİŞİM KARTLARI -->
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Regl Kartı -->
+        <div onclick="switchTab('period')" class="glass-card p-4 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer border border-rose-100 flex flex-col justify-between space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center">
+              <!-- Pembe Kedi -->
+              <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="45" fill="#FFC0CB" stroke="#FF69B4" stroke-width="4"/>
+                <ellipse cx="50" cy="53" rx="30" ry="26" fill="white"/>
+                <path d="M 28 38 L 35 20 L 45 32 Z" fill="#FFC0CB" stroke="#333" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M 72 38 L 65 20 L 55 32 Z" fill="#FFC0CB" stroke="#333" stroke-width="3" stroke-linejoin="round"/>
+                <ellipse cx="40" cy="48" rx="3.5" ry="4.5" fill="#333"/>
+                <ellipse cx="60" cy="48" rx="3.5" ry="4.5" fill="#333"/>
+                <path d="M 47 54 Q 50 57 53 54" stroke="#333" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              </svg>
+            </div>
+            <span class="text-xs text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-md">Takip</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-700 text-sm">Regl Döngüsü</h3>
+            <p id="homePeriodStatus" class="text-xs text-slate-500 mt-0.5">Hesaplanıyor...</p>
+          </div>
+        </div>
+
+        <!-- Takvim Kartı -->
+        <div onclick="switchTab('calendar')" class="glass-card p-4 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer border border-purple-100 flex flex-col justify-between space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+              <!-- Takvim Kedi -->
+              <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
+                <path d="M 30 75 C 20 60 25 35 40 30 C 55 25 65 40 60 75 Z" fill="#6c5ce7"/>
+                <path d="M 32 35 L 25 18 L 40 25 Z" fill="#6c5ce7"/>
+                <path d="M 48 30 L 55 15 L 58 28 Z" fill="#6c5ce7"/>
+                <ellipse cx="48" cy="38" rx="2.5" ry="3.5" fill="white"/>
+                <rect x="52" y="45" width="38" height="32" rx="6" fill="white" stroke="#333" stroke-width="3"/>
+                <rect x="52" y="45" width="38" height="10" fill="#ff7675"/>
+                <text x="71" y="70" font-family="sans-serif" font-weight="bold" font-size="14" fill="#333" text-anchor="middle">14</text>
+              </svg>
+            </div>
+            <span class="text-xs text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded-md">Planlar</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-700 text-sm">Ortak Takvim</h3>
+            <p id="homeEventStatus" class="text-xs text-slate-500 mt-0.5">Etkinlik yok</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SON NOTLARIMIZ -->
+      <div class="glass-card rounded-2xl p-5 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <span>📝</span> Son Notlar & Hatırlatmalar
+          </h2>
+          <button onclick="switchTab('notes')" class="text-xs text-rose-500 font-semibold hover:underline">Tümünü Gör</button>
+        </div>
+        <div id="homeRecentNotes" class="space-y-2">
+          <p class="text-xs text-slate-400 italic">Yükleniyor...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SEKMELER: REGL TAKİBİ -->
+    <section id="tab-period" class="tab-content hidden space-y-6">
+      <div class="glass-card rounded-3xl p-6 shadow-sm border border-rose-100 space-y-5">
+        <div class="text-center space-y-2">
+          <div class="w-16 h-16 rounded-full bg-rose-100 mx-auto flex items-center justify-center shadow-inner">
+            <!-- Pembe Kedi -->
+            <svg class="w-11 h-11" viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="45" fill="#FFC0CB" stroke="#FF69B4" stroke-width="4"/>
+              <ellipse cx="50" cy="53" rx="30" ry="26" fill="white"/>
+              <path d="M 28 38 L 35 20 L 45 32 Z" fill="#FFC0CB" stroke="#333" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M 72 38 L 65 20 L 55 32 Z" fill="#FFC0CB" stroke="#333" stroke-width="3" stroke-linejoin="round"/>
+              <ellipse cx="40" cy="48" rx="3.5" ry="4.5" fill="#333"/>
+              <ellipse cx="60" cy="48" rx="3.5" ry="4.5" fill="#333"/>
+              <path d="M 47 54 Q 50 57 53 54" stroke="#333" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800">Regl & Döngü Takibi</h2>
+          <p class="text-xs text-slate-500">Döngü günlerini kaydet, tahmini tarihi canlı takip edin.</p>
+        </div>
+
+        <!-- DÖNGÜ SAYAÇ HALKASI -->
+        <div class="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl p-5 border border-rose-100 text-center space-y-2">
+          <span class="text-xs font-semibold text-rose-500 uppercase tracking-wider">Tahmini Kalan Süre</span>
+          <div id="periodCountdown" class="text-3xl font-extrabold text-slate-800">-- Gün</div>
+          <p id="nextPeriodDateText" class="text-xs text-slate-500">Sonraki Tahmini Tarih: --.--.----</p>
+        </div>
+
+        <!-- VERİ GİRİŞİ -->
+        <div class="space-y-4 pt-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Son Regl Başlangıç Tarihi</label>
+            <input type="date" id="periodStartDate" class="w-full bg-white border border-rose-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-400 shadow-sm">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Döngü (Gün)</label>
+              <input type="number" id="cycleLength" value="28" class="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-400">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Süre (Gün)</label>
+              <input type="number" id="periodDuration" value="5" class="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-400">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Bugünkü Ruh Hali & Belirtiler</label>
+            <div class="flex flex-wrap gap-2 pt-1" id="moodTags">
+              <button onclick="toggleMood(this)" class="px-3 py-1.5 rounded-full bg-white border border-rose-200 text-xs font-medium text-slate-600 hover:bg-rose-50">😊 Neşeli</button>
+              <button onclick="toggleMood(this)" class="px-3 py-1.5 rounded-full bg-white border border-rose-200 text-xs font-medium text-slate-600 hover:bg-rose-50">😴 Yorgun</button>
+              <button onclick="toggleMood(this)" class="px-3 py-1.5 rounded-full bg-white border border-rose-200 text-xs font-medium text-slate-600 hover:bg-rose-50">🥺 Hassas</button>
+              <button onclick="toggleMood(this)" class="px-3 py-1.5 rounded-full bg-white border border-rose-200 text-xs font-medium text-slate-600 hover:bg-rose-50">🍫 Tatlı Krizinde</button>
+              <button onclick="toggleMood(this)" class="px-3 py-1.5 rounded-full bg-white border border-rose-200 text-xs font-medium text-slate-600 hover:bg-rose-50">⚡ Sancılı</button>
+            </div>
+          </div>
+
+          <button onclick="savePeriodData()" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 rounded-xl shadow-md shadow-rose-200 transition-all text-sm">
+            Döngü Bilgilerini Kaydet
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SEKMELER: TAKVİM & PLANLAR -->
+    <section id="tab-calendar" class="tab-content hidden space-y-6">
+      <div class="glass-card rounded-3xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <!-- Takvim Kedi -->
+            <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
+              <path d="M 30 75 C 20 60 25 35 40 30 C 55 25 65 40 60 75 Z" fill="#6c5ce7"/>
+              <path d="M 32 35 L 25 18 L 40 25 Z" fill="#6c5ce7"/>
+              <path d="M 48 30 L 55 15 L 58 28 Z" fill="#6c5ce7"/>
+              <ellipse cx="48" cy="38" rx="2.5" ry="3.5" fill="white"/>
+              <rect x="52" y="45" width="38" height="32" rx="6" fill="white" stroke="#333" stroke-width="3"/>
+              <rect x="52" y="45" width="38" height="10" fill="#ff7675"/>
+              <text x="71" y="70" font-family="sans-serif" font-weight="bold" font-size="14" fill="#333" text-anchor="middle">14</text>
+            </svg>
+            <h2 class="text-lg font-bold text-slate-800">Ortak Takvimimiz</h2>
+          </div>
+          <button onclick="toggleModal('eventModal')" class="bg-rose-500 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm hover:bg-rose-600 transition-all">
+            + Etkinlik Ekle
+          </button>
+        </div>
+
+        <!-- ETKİNLİK LİSTESİ -->
+        <div id="eventList" class="space-y-3 pt-2">
+          <p class="text-xs text-slate-400 text-center py-4">Etkinlikler yükleniyor...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. SEKMELER: SEVGİLİMİN NOTLARI -->
+    <section id="tab-notes" class="tab-content hidden space-y-6">
+      <div class="glass-card rounded-3xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <!-- Uyuyan Kedi -->
+            <svg class="w-7 h-7" viewBox="0 0 100 100" fill="none">
+              <path d="M 20 65 C 20 40 40 30 65 30 C 85 30 90 55 85 70 C 80 80 60 85 40 85 C 25 85 20 75 20 65 Z" fill="none" stroke="#4a4a4a" stroke-width="5" stroke-linecap="round"/>
+              <path d="M 30 45 C 25 30 35 20 45 35" fill="none" stroke="#4a4a4a" stroke-width="4" stroke-linecap="round"/>
+              <path d="M 50 32 C 50 18 62 18 60 32" fill="none" stroke="#4a4a4a" stroke-width="4" stroke-linecap="round"/>
+              <path d="M 32 50 C 36 53 40 50 42 48" stroke="#4a4a4a" stroke-width="3" fill="none" stroke-linecap="round"/>
+            </svg>
+            <h2 class="text-lg font-bold text-slate-800">Özel Notlarımız</h2>
+          </div>
+          <button onclick="toggleModal('noteModal')" class="bg-rose-500 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm hover:bg-rose-600 transition-all">
+            + Yeni Not
+          </button>
+        </div>
+
+        <div id="notesContainer" class="space-y-3">
+          <p class="text-xs text-slate-400 text-center py-4">Notlar yükleniyor...</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-lg border-t border-rose-100 max-w-md mx-auto px-6 py-2.5 flex items-center justify-between shadow-lg">
+    
+    <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-rose-500 transition-all bottom-nav-active">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span class="text-[10px] font-semibold">Ana Sayfa</span>
+    </button>
+
+    <button onclick="switchTab('period')" id="nav-period" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-rose-500 transition-all">
+      <!-- Pembe Kedi İkonu -->
+      <svg class="w-6 h-6" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="45" fill="#FFC0CB" stroke="#FF69B4" stroke-width="5"/>
+        <ellipse cx="50" cy="53" rx="30" ry="26" fill="white"/>
+        <path d="M 28 38 L 35 20 L 45 32 Z" fill="#FFC0CB" stroke="#333" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M 72 38 L 65 20 L 55 32 Z" fill="#FFC0CB" stroke="#333" stroke-width="4" stroke-linejoin="round"/>
+        <ellipse cx="40" cy="48" rx="4" ry="5" fill="#333"/>
+        <ellipse cx="60" cy="48" rx="4" ry="5" fill="#333"/>
+      </svg>
+      <span class="text-[10px] font-semibold">Regl Takibi</span>
+    </button>
+
+    <button onclick="switchTab('calendar')" id="nav-calendar" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-rose-500 transition-all">
+      <!-- Takvim Kedi İkonu -->
+      <svg class="w-6 h-6" viewBox="0 0 100 100" fill="none">
+        <path d="M 30 75 C 20 60 25 35 40 30 C 55 25 65 40 60 75 Z" fill="#6c5ce7"/>
+        <path d="M 32 35 L 25 18 L 40 25 Z" fill="#6c5ce7"/>
+        <path d="M 48 30 L 55 15 L 58 28 Z" fill="#6c5ce7"/>
+        <rect x="52" y="45" width="38" height="32" rx="6" fill="white" stroke="#333" stroke-width="4"/>
+        <rect x="52" y="45" width="38" height="10" fill="#ff7675"/>
+      </svg>
+      <span class="text-[10px] font-semibold">Takvim</span>
+    </button>
+
+    <button onclick="switchTab('notes')" id="nav-notes" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-rose-500 transition-all">
+      <!-- Uyuyan Kedi İkonu -->
+      <svg class="w-6 h-6" viewBox="0 0 100 100" fill="none">
+        <path d="M 20 65 C 20 40 40 30 65 30 C 85 30 90 55 85 70 C 80 80 60 85 40 85 C 25 85 20 75 20 65 Z" fill="none" stroke="#4a4a4a" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 30 45 C 25 30 35 20 45 35" fill="none" stroke="#4a4a4a" stroke-width="5" stroke-linecap="round"/>
+        <path d="M 50 32 C 50 18 62 18 60 32" fill="none" stroke="#4a4a4a" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <span class="text-[10px] font-semibold">Notlar</span>
+    </button>
+
+  </nav>
+
+  <!-- MODALS (PENCERELER) -->
+
+  <!-- MODAL 1: ETKİNLİK EKLE -->
+  <div id="eventModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-xl">
+      <h3 class="font-bold text-slate-800 text-lg">Yeni Etkinlik Ekle 📅</h3>
+      <input type="text" id="eventTitle" placeholder="Etkinlik Başlığı (Örn: Yıldönümü)" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+      <input type="date" id="eventDate" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+      <textarea id="eventDesc" placeholder="Notlar / Detaylar..." class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 h-20"></textarea>
+      <div class="flex gap-2">
+        <button onclick="toggleModal('eventModal')" class="w-1/2 py-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">İptal</button>
+        <button onclick="saveEvent()" class="w-1/2 py-3 bg-rose-500 text-white rounded-xl text-sm font-semibold shadow-md">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: NOT EKLE -->
+  <div id="noteModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-xl">
+      <h3 class="font-bold text-slate-800 text-lg">Yeni Not Yaz 📝</h3>
+      <input type="text" id="noteTitle" placeholder="Not Başlığı" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+      <textarea id="noteContent" placeholder="Mesajın..." class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 h-28"></textarea>
+      <div class="flex gap-2">
+        <button onclick="toggleModal('noteModal')" class="w-1/2 py-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold">İptal</button>
+        <button onclick="saveNote()" class="w-1/2 py-3 bg-rose-500 text-white rounded-xl text-sm font-semibold shadow-md">Paylaş</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: BİLGİ & TELEFONA YÜKLEME -->
+  <div id="infoModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-xl text-center">
+      <div class="w-12 h-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto text-xl">📱</div>
+      <h3 class="font-bold text-slate-800 text-lg">Telefona Uygulama Gibi Yükleyin</h3>
+      <div class="text-xs text-slate-600 text-left space-y-2 bg-rose-50 p-4 rounded-2xl">
+        <p><strong>iOS (Safari):</strong> Alt ortadaki "Paylaş" ikonuna basıp "Ana Ekrana Ekle" seçeneğini seçin.</p>
+        <p><strong>Android (Chrome):</strong> Sağ üstteki üç noktaya basıp "Uygulamayı Yükle" deyin.</p>
+      </div>
+      <button onclick="toggleModal('infoModal')" class="w-full py-3 bg-rose-500 text-white rounded-xl text-sm font-semibold">Tamamdır</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC & FIREBASE -->
+  <script>
+    // ----------------------------------------------------
+    // 1. FIREBASE YAPILANDIRMASI (CANLI SENKRONİZASYON)
+    // ----------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyBq4IC9_B7dctYxsbcicXCd4QzmnQcz5sQ",
+      authDomain: "bizimapp-e7edb.firebaseapp.com",
+      databaseURL: "https://bizimapp-e7edb-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "bizimapp-e7edb",
+      storageBucket: "bizimapp-e7edb.firebasestorage.app",
+      messagingSenderId: "835511383504",
+      appId: "1:835511383504:web:0262330928e5a3c470f5d5",
+      measurementId: "G-BBHXJC6DM3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ----------------------------------------------------
+    // 2. TAB (SEKME) DEĞİŞTİRME MANTIĞI
+    // ----------------------------------------------------
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bottom-nav-active'));
+
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`nav-${tabName}`).classList.add('bottom-nav-active');
+    }
+
+    function toggleModal(modalId) {
+      const el = document.getElementById(modalId);
+      el.classList.toggle('hidden');
+    }
+
+    // ----------------------------------------------------
+    // 3. GÜNÜN NOTU CANLI VERİ
+    // ----------------------------------------------------
+    db.ref('dailyNote').on('value', snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        document.getElementById('dailyNoteText').innerText = `"${data.text}"`;
+        document.getElementById('dailyNoteDate').innerText = data.date || '';
+      } else {
+        document.getElementById('dailyNoteText').innerText = '"Seni çok seviyorum! Günün harika geçsin 💖"';
+        document.getElementById('dailyNoteDate').innerText = new Date().toLocaleDateString('tr-TR');
+      }
+    });
+
+    function editDailyNote() {
+      const newNote = prompt("Sevgilin için bugünün notunu yaz:");
+      if (newNote) {
+        const today = new Date().toLocaleDateString('tr-TR');
+        db.ref('dailyNote').set({
+          text: newNote,
+          date: today
+        });
+      }
+    }
+
+    // ----------------------------------------------------
+    // 4. REGL TAKİBİ CANLI VERİ & HESAPLAMA
+    // ----------------------------------------------------
+    db.ref('periodData').on('value', snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        if(data.startDate) document.getElementById('periodStartDate').value = data.startDate;
+        if(data.cycleLength) document.getElementById('cycleLength').value = data.cycleLength;
+        if(data.duration) document.getElementById('periodDuration').value = data.duration;
+        
+        calculatePeriod(data.startDate, data.cycleLength);
+      }
+    });
+
+    function savePeriodData() {
+      const startDate = document.getElementById('periodStartDate').value;
+      const cycleLength = document.getElementById('cycleLength').value;
+      const duration = document.getElementById('periodDuration').value;
+
+      if (!startDate) {
+        alert("Lütfen bir başlangıç tarihi seçin.");
+        return;
+      }
+
+      db.ref('periodData').set({
+        startDate: startDate,
+        cycleLength: parseInt(cycleLength),
+        duration: parseInt(duration)
+      });
+
+      alert("Döngü bilgileri başarıyla kaydedildi! 💕");
+    }
+
+    function calculatePeriod(startDateStr, cycle) {
+      if(!startDateStr) return;
+      
+      const start = new Date(startDateStr);
+      const next = new Date(start);
+      next.setDate(start.getDate() + parseInt(cycle));
+
+      const today = new Date();
+      const diffTime = next - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      const formattedNext = next.toLocaleDateString('tr-TR');
+
+      if (diffDays > 0) {
+        document.getElementById('periodCountdown').innerText = `${diffDays} Gün`;
+        document.getElementById('nextPeriodDateText').innerText = `Sonraki Tahmini Tarih: ${formattedNext}`;
+        document.getElementById('homePeriodStatus').innerText = `Sonraki regle ${diffDays} gün kaldı`;
+      } else if (diffDays === 0) {
+        document.getElementById('periodCountdown').innerText = `Bugün!`;
+        document.getElementById('nextPeriodDateText').innerText = `Tahmini Başlangıç: Bugün`;
+        document.getElementById('homePeriodStatus').innerText = `Bugün regl günü`;
+      } else {
+        document.getElementById('periodCountdown').innerText = `Günü Geldi`;
+        document.getElementById('nextPeriodDateText').innerText = `Tarih: ${formattedNext}`;
+        document.getElementById('homePeriodStatus').innerText = `Döngü güncellenmeli`;
+      }
+    }
+
+    function toggleMood(btn) {
+      btn.classList.toggle('bg-rose-500');
+      btn.classList.toggle('text-white');
+      btn.classList.toggle('bg-white');
+    }
+
+    // ----------------------------------------------------
+    // 5. TAKVİM & ETKİNLİK LİSTESİ
+    // ----------------------------------------------------
+    db.ref('events').on('value', snapshot => {
+      const eventList = document.getElementById('eventList');
+      eventList.innerHTML = '';
+      const data = snapshot.val();
+
+      if (data) {
+        let firstEvent = null;
+        Object.keys(data).forEach(key => {
+          const ev = data[key];
+          if(!firstEvent) firstEvent = ev;
+
+          const item = document.createElement('div');
+          item.className = 'flex items-center justify-between p-3 bg-white/70 border border-purple-100 rounded-2xl shadow-sm';
+          item.innerHTML = `
+            <div>
+              <h4 class="font-bold text-sm text-slate-800">${ev.title}</h4>
+              <p class="text-xs text-slate-500">${ev.date} ${ev.desc ? '• ' + ev.desc : ''}</p>
+            </div>
+            <button onclick="deleteEvent('${key}')" class="text-slate-300 hover:text-rose-500 text-xs p-1">🗑️</button>
+          `;
+          eventList.appendChild(item);
+        });
+
+        if(firstEvent) {
+          document.getElementById('homeEventStatus').innerText = `${firstEvent.title} (${firstEvent.date})`;
+        }
+      } else {
+        eventList.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Henüz eklenmiş bir plan yok.</p>';
+        document.getElementById('homeEventStatus').innerText = 'Planlanan etkinlik yok';
+      }
+    });
+
+    function saveEvent() {
+      const title = document.getElementById('eventTitle').value;
+      const date = document.getElementById('eventDate').value;
+      const desc = document.getElementById('eventDesc').value;
+
+      if (!title || !date) {
+        alert("Lütfen başlık ve tarih girin.");
+        return;
+      }
+
+      db.ref('events').push({
+        title: title,
+        date: date,
+        desc: desc
+      });
+
+      document.getElementById('eventTitle').value = '';
+      document.getElementById('eventDate').value = '';
+      document.getElementById('eventDesc').value = '';
+      toggleModal('eventModal');
+    }
+
+    function deleteEvent(key) {
+      if(confirm('Bu etkinliği silmek istiyor musunuz?')) {
+        db.ref('events/' + key).remove();
+      }
+    }
+
+    // ----------------------------------------------------
+    // 6. NOTLAR CANLI VERİ
+    // ----------------------------------------------------
+    db.ref('notes').on('value', snapshot => {
+      const container = document.getElementById('notesContainer');
+      const homeContainer = document.getElementById('homeRecentNotes');
+      container.innerHTML = '';
+      homeContainer.innerHTML = '';
+
+      const data = snapshot.val();
+
+      if (data) {
+        const keys = Object.keys(data).reverse();
+        
+        keys.forEach((key, index) => {
+          const n = data[key];
+
+          // Ana Notlar Listesi
+          const card = document.createElement('div');
+          card.className = 'p-4 bg-white/80 border border-rose-100 rounded-2xl shadow-sm space-y-1 relative';
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-sm text-slate-800">${n.title}</h4>
+              <span class="text-[10px] text-slate-400">${n.date}</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">${n.content}</p>
+            <button onclick="deleteNote('${key}')" class="absolute bottom-2 right-2 text-slate-300 hover:text-rose-500 text-xs">🗑️</button>
+          `;
+          container.appendChild(card);
+
+          // Ana Sayfadaki Özet (İlk 2 not)
+          if(index < 2) {
+            const homeCard = document.createElement('div');
+            homeCard.className = 'p-3 bg-white/60 border border-rose-100 rounded-xl text-xs flex justify-between items-center';
+            homeCard.innerHTML = `
+              <span class="font-semibold text-slate-700 truncate">${n.title}</span>
+              <span class="text-[10px] text-slate-400">${n.date}</span>
+            `;
+            homeContainer.appendChild(homeCard);
+          }
+        });
+      } else {
+        container.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Henüz hiç not yazılmamış.</p>';
+        homeContainer.innerHTML = '<p class="text-xs text-slate-400 italic">Henüz kaydedilmiş not yok.</p>';
+      }
+    });
+
+    function saveNote() {
+      const title = document.getElementById('noteTitle').value;
+      const content = document.getElementById('noteContent').value;
+
+      if (!title || !content) {
+        alert("Lütfen başlık ve not içeriğini doldurun.");
+        return;
+      }
+
+      db.ref('notes').push({
+        title: title,
+        content: content,
+        date: new Date().toLocaleDateString('tr-TR')
+      });
+
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteContent').value = '';
+      toggleModal('noteModal');
+    }
+
+    function deleteNote(key) {
+      if(confirm('Bu notu silmek istiyor musunuz?')) {
+        db.ref('notes/' + key).remove();
+      }
+    }
+  </script>
+</body>
+</html>
